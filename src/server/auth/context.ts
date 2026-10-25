@@ -2,32 +2,16 @@ import "server-only";
 import { sql } from "kysely";
 import { notFound } from "next/navigation";
 import { cache } from "react";
-import { can, isRole, type Permission, type Role } from "@/lib/auth/permissions";
+import { isRole, type Permission } from "@/lib/auth/permissions";
 import { getDb, withUser } from "@/server/db/client";
 import { forbidden } from "@/server/errors";
-import { getSessionUser, identityOf, requireUser, type SessionUser } from "./session";
+import { assertCan, type WorkspaceContext } from "./guard";
+import { getSessionUser, identityOf, requireUser } from "./session";
 
 export const SLUG_PATTERN = /^[a-z0-9][a-z0-9-]{1,62}[a-z0-9]$/;
 
-export type WorkspaceContext = {
-  user: SessionUser;
-  identity: ReturnType<typeof identityOf>;
-  workspace: {
-    id: string;
-    slug: string;
-    name: string;
-    kind: "internal" | "client";
-    isDemo: boolean;
-    timezone: string;
-    description: string | null;
-    organizationId: string;
-  };
-  organization: { id: string; name: string; slug: string };
-  /** Effective role in this workspace. */
-  role: Role;
-  /** Role in the owning organization. */
-  orgRole: Role;
-};
+export type { WorkspaceContext } from "./guard";
+export { assertCan, permits } from "./guard";
 
 /** Loads a workspace through RLS; null when it doesn't exist or isn't accessible. */
 export const getWorkspaceContext = cache(async (slug: string): Promise<WorkspaceContext | null> => {
@@ -51,6 +35,7 @@ export const getWorkspaceContext = cache(async (slug: string): Promise<Workspace
         "o.slug as org_slug",
         sql<string | null>`app.workspace_role(w.id)`.as("role"),
         sql<string | null>`app.org_role(o.id)::text`.as("org_role"),
+        sql<boolean>`app.is_client_guest(o.id)`.as("is_client_guest"),
       ])
       .where("w.slug", "=", slug)
       .where("w.deleted_at", "is", null)
@@ -73,6 +58,7 @@ export const getWorkspaceContext = cache(async (slug: string): Promise<Workspace
     organization: { id: row.organization_id, name: row.org_name, slug: row.org_slug },
     role: row.role,
     orgRole: row.org_role,
+    isClientGuest: row.is_client_guest,
   };
 });
 
@@ -90,15 +76,6 @@ export async function loadWorkspaceForAction(slug: string, permission: Permissio
   if (!ctx) throw forbidden("This workspace isn't available.");
   assertCan(ctx, permission);
   return ctx;
-}
-
-export function assertCan(ctx: WorkspaceContext, permission: Permission) {
-  const role = permission.startsWith("org.") ? ctx.orgRole : ctx.role;
-  if (!can(role, permission)) throw forbidden();
-}
-
-export function permits(ctx: WorkspaceContext, permission: Permission) {
-  return can(permission.startsWith("org.") ? ctx.orgRole : ctx.role, permission);
 }
 
 /** Platform administrators are checked through the privileged connection. */

@@ -2,7 +2,7 @@ import "server-only";
 import { aiOutputSchema, aiRequestSchema, sanitizeOutput, type AiOutput, type AiRequest, type AiTask } from "@/lib/ai/tasks";
 import type { Platform } from "@/lib/platforms/registry";
 import { selectProvider, type AiProvider, type AiProviderId } from "@/server/ai/provider";
-import { assertCan, type WorkspaceContext } from "@/server/auth/context";
+import { assertCan, type WorkspaceContext } from "@/server/auth/guard";
 import { getDb, withSystem, withUser } from "@/server/db/client";
 import { AppError } from "@/server/errors";
 import { logger } from "@/server/observability/logger";

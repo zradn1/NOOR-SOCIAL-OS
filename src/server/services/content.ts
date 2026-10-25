@@ -5,7 +5,7 @@ import { validateForPlatforms, type ValidationIssue } from "@/lib/platforms/cons
 import { PLATFORM_META, type Platform } from "@/lib/platforms/registry";
 import { zonedToUtc } from "@/lib/time/zoned";
 import { postInputSchema, type PostInput } from "@/lib/validation/content";
-import { assertCan, type WorkspaceContext } from "@/server/auth/context";
+import { assertCan, type WorkspaceContext } from "@/server/auth/guard";
 import { getDb, withUser, type Tx } from "@/server/db/client";
 import type { DB } from "@/server/db/schema.generated";
 import { env } from "@/server/env";

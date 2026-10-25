@@ -22,6 +22,7 @@ import { formatCompact, formatPercent } from "@/lib/utils/format";
 import { permits, requireWorkspace } from "@/server/auth/context";
 import { getAnalyticsOverview, getPublishingOutcomes, getTopPosts, getUpcomingPosts } from "@/server/services/analytics";
 import { listSocialAccounts } from "@/server/services/social-accounts";
+import { cn } from "@/lib/utils/cn";
 
 export const metadata: Metadata = { title: "Dashboard" };
 
@@ -36,6 +37,7 @@ export default async function DashboardPage({ params, searchParams }: PageProps<
   const range = presetRange(preset, todayIn(tz, now));
   const days = RANGE_PRESETS[preset];
   const base = `/w/${ctx.workspace.slug}`;
+  const canCreateDemo = permits(ctx, "demo.manage") && !ctx.isClientGuest;
 
   const [accounts, overview, upcoming, topPosts, outcomes] = await Promise.all([
     listSocialAccounts(ctx),
@@ -88,7 +90,7 @@ export default async function DashboardPage({ params, searchParams }: PageProps<
             title="No metrics yet"
             description="NOOR never invents numbers. Metrics appear once an account is connected through an official integration or you import a platform export."
           />
-          <CardContent className="grid gap-4 md:grid-cols-3">
+          <CardContent className={cn("grid gap-4", canCreateDemo ? "md:grid-cols-3" : "md:grid-cols-2")}>
             <div className="space-y-2 rounded-md border border-line bg-sunken p-4">
               <Link2 aria-hidden="true" className="size-4 text-gold-300" />
               <p className="text-[13px] font-medium text-fg">Add accounts</p>
@@ -107,12 +109,14 @@ export default async function DashboardPage({ params, searchParams }: PageProps<
                 <Link href={`${base}/content`}>Content Studio</Link>
               </Button>
             </div>
-            <div className="space-y-2 rounded-md border border-demo-line bg-demo-wash p-4">
-              <Sparkles aria-hidden="true" className="size-4 text-demo" />
-              <p className="text-[13px] font-medium text-fg">Explore with demo data</p>
-              <p className="text-xs leading-relaxed text-fg-muted">A separate, clearly labelled workspace with simulated accounts and metrics.</p>
-              {permits(ctx, "demo.manage") ? <CreateDemoWorkspaceButton slug={ctx.workspace.slug} /> : null}
-            </div>
+            {canCreateDemo ? (
+              <div className="space-y-2 rounded-md border border-demo-line bg-demo-wash p-4">
+                <Sparkles aria-hidden="true" className="size-4 text-demo" />
+                <p className="text-[13px] font-medium text-fg">Explore with demo data</p>
+                <p className="text-xs leading-relaxed text-fg-muted">A separate, clearly labelled workspace with simulated accounts and metrics.</p>
+                <CreateDemoWorkspaceButton slug={ctx.workspace.slug} />
+              </div>
+            ) : null}
           </CardContent>
         </Card>
       ) : null}

@@ -3,7 +3,7 @@ import { sql } from "kysely";
 import { parseMetricsImport } from "@/lib/analytics/csv";
 import { todayIn } from "@/lib/time/zoned";
 import { ingestAccountMetrics } from "@/server/analytics/ingest";
-import { assertCan, type WorkspaceContext } from "@/server/auth/context";
+import { assertCan, type WorkspaceContext } from "@/server/auth/guard";
 import { getDb, withSystem, withUser } from "@/server/db/client";
 import { AppError, notFound } from "@/server/errors";
 import { recordAudit } from "./audit";

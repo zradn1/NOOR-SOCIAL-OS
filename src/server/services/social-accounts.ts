@@ -2,7 +2,7 @@ import "server-only";
 import { randomUUID } from "node:crypto";
 import { sql } from "kysely";
 import { PLATFORM_META, type Platform } from "@/lib/platforms/registry";
-import { assertCan, type WorkspaceContext } from "@/server/auth/context";
+import { assertCan, type WorkspaceContext } from "@/server/auth/guard";
 import type { SessionUser } from "@/server/auth/session";
 import { getDb, withSystem, withUser, type Tx } from "@/server/db/client";
 import { env } from "@/server/env";

@@ -271,6 +271,7 @@ export interface OauthStates {
 export interface OrganizationInvitations {
   accepted_at: Timestamp | null;
   accepted_by: string | null;
+  client_guest: Generated<boolean>;
   created_at: Generated<Timestamp>;
   email: string;
   expires_at: Timestamp;
@@ -287,6 +288,7 @@ export interface OrganizationInvitations {
 export interface OrganizationMembers {
   created_at: Generated<Timestamp>;
   invited_by: string | null;
+  is_client_guest: Generated<boolean>;
   organization_id: string;
   role: MemberRole;
   updated_at: Generated<Timestamp>;

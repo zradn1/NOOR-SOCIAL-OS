@@ -2,7 +2,7 @@ import "server-only";
 import { createHash, randomBytes } from "node:crypto";
 import { sql } from "kysely";
 import { assignableRoles, ROLE_RANK, type Role, type WorkspaceRole } from "@/lib/auth/permissions";
-import { assertCan, type WorkspaceContext } from "@/server/auth/context";
+import { assertCan, type WorkspaceContext } from "@/server/auth/guard";
 import { getDb, withUser } from "@/server/db/client";
 import { env } from "@/server/env";
 import { AppError, forbidden, notFound } from "@/server/errors";
@@ -17,6 +17,7 @@ export type OrganizationMember = {
   role: Role;
   joinedAt: string;
   workspaceCount: number;
+  isClientGuest: boolean;
 };
 
 export async function listOrganizationMembers(ctx: WorkspaceContext, db = getDb()): Promise<OrganizationMember[]> {
@@ -30,6 +31,7 @@ export async function listOrganizationMembers(ctx: WorkspaceContext, db = getDb(
           "m.user_id",
           "m.role",
           "m.created_at",
+          "m.is_client_guest",
           "p.email",
           "p.full_name",
           (eb) =>
@@ -53,6 +55,7 @@ export async function listOrganizationMembers(ctx: WorkspaceContext, db = getDb(
     role: r.role,
     joinedAt: r.created_at.toISOString(),
     workspaceCount: Number(r.workspace_count ?? 0),
+    isClientGuest: r.is_client_guest,
   }));
 }
 
@@ -64,11 +67,14 @@ export async function changeMemberRole(ctx: WorkspaceContext, userId: string, ro
     async (trx) => {
       const current = await trx
         .selectFrom("organization_members")
-        .select("role")
+        .select(["role", "is_client_guest"])
         .where("organization_id", "=", ctx.organization.id)
         .where("user_id", "=", userId)
         .executeTakeFirst();
       if (!current) throw notFound("That member no longer exists.");
+      if (current.is_client_guest) {
+        throw new AppError("VALIDATION", "Client guests' access is managed on their client workspace's access page.");
+      }
       if (current.role === "owner" && ctx.orgRole !== "owner") throw forbidden("Only owners can change an owner's role.");
       if (ROLE_RANK[current.role] > ROLE_RANK[ctx.orgRole]) throw forbidden();
       const result = await trx
@@ -147,6 +153,7 @@ export type InvitationSummary = {
   workspaceCount: number;
   expiresAt: string;
   createdAt: string;
+  clientGuest: boolean;
 };
 
 export async function listPendingInvitations(ctx: WorkspaceContext, db = getDb()): Promise<InvitationSummary[]> {
@@ -156,7 +163,7 @@ export async function listPendingInvitations(ctx: WorkspaceContext, db = getDb()
     (trx) =>
       trx
         .selectFrom("organization_invitations")
-        .select(["id", "email", "role", "workspace_ids", "expires_at", "created_at"])
+        .select(["id", "email", "role", "workspace_ids", "expires_at", "created_at", "client_guest"])
         .where("organization_id", "=", ctx.organization.id)
         .where("accepted_at", "is", null)
         .where("revoked_at", "is", null)
@@ -171,6 +178,7 @@ export async function listPendingInvitations(ctx: WorkspaceContext, db = getDb()
     workspaceCount: r.workspace_ids.length,
     expiresAt: r.expires_at.toISOString(),
     createdAt: r.created_at.toISOString(),
+    clientGuest: r.client_guest,
   }));
 }
 
@@ -303,6 +311,7 @@ export type WorkspaceAccessRow = {
   /** Explicit assignment, or null when access is inherited from an org admin role. */
   workspaceRole: WorkspaceRole | null;
   effectiveRole: Role | null;
+  isClientGuest: boolean;
 };
 
 /** Every organization member with their access to this workspace. */
@@ -316,7 +325,7 @@ export async function listWorkspaceAccess(ctx: WorkspaceContext, db = getDb()): 
         .leftJoin("workspace_members as wm", (join) =>
           join.onRef("wm.user_id", "=", "m.user_id").on("wm.workspace_id", "=", ctx.workspace.id),
         )
-        .select(["m.user_id", "m.role as org_role", "wm.role as workspace_role", "p.email", "p.full_name"])
+        .select(["m.user_id", "m.role as org_role", "m.is_client_guest", "wm.role as workspace_role", "p.email", "p.full_name"])
         .where("m.organization_id", "=", ctx.organization.id)
         .orderBy("p.email")
         .execute(),
@@ -331,6 +340,7 @@ export async function listWorkspaceAccess(ctx: WorkspaceContext, db = getDb()): 
       orgRole: r.org_role,
       workspaceRole: r.workspace_role,
       effectiveRole: inherited ? r.org_role : (r.workspace_role ?? null),
+      isClientGuest: r.is_client_guest,
     };
   });
 }

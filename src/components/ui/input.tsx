@@ -27,8 +27,10 @@ export function Textarea({ className, ...props }: ComponentProps<"textarea">) {
  * mobile picker behaviour correct without extra JavaScript.
  */
 export function Select({ className, children, ...props }: ComponentProps<"select">) {
+  // A fixed-width select shrink-wraps its wrapper so the chevron stays inside it.
+  const fixedWidth = /(^|\s)w-(?!full)/.test(className ?? "");
   return (
-    <div className="relative">
+    <div className={fixedWidth ? "relative inline-block" : "relative"}>
       <select
         className={cn(fieldControlClass, "h-9 cursor-pointer appearance-none pr-9", className)}
         {...props}

@@ -1,5 +1,5 @@
 import "server-only";
-import { assertCan, type WorkspaceContext } from "@/server/auth/context";
+import { assertCan, type WorkspaceContext } from "@/server/auth/guard";
 import { getDb, withSystem } from "@/server/db/client";
 import { DEMO_BRAND } from "@/server/demo/content";
 import { seedAccountAnalytics, seedDemoWorkspace } from "@/server/demo/seed";

@@ -1,6 +1,6 @@
 import "server-only";
 import { sql } from "kysely";
-import { assertCan, type WorkspaceContext } from "@/server/auth/context";
+import { assertCan, type WorkspaceContext } from "@/server/auth/guard";
 import { getDb, withUser } from "@/server/db/client";
 import { forbidden } from "@/server/errors";
 import { recordAudit } from "./audit";

@@ -43,7 +43,7 @@ const FEATURE_LABELS: Record<string, string> = {
   client_workspaces: "Client workspaces",
   analytics_import: "Analytics import",
   audit_log: "Audit log",
-  client_roles: "Client roles",
+  client_roles: "Client guest access",
 };
 
 export function limitExceeded(key: string) {
@@ -61,6 +61,9 @@ const INVALID_MESSAGES: Record<string, string> = {
   role: "That role can't be assigned here.",
   workspace: "One of the selected workspaces doesn't belong to this organization.",
   workspace_role: "Choose a workspace role.",
+  guest_role: "Client guests can be editors, analysts, or viewers.",
+  guest_workspace: "Client guests can only join client workspaces.",
+  ttl: "Choose an expiry between 1 hour and 30 days.",
 };
 
 const CONFLICT_MESSAGES: Record<string, string> = {

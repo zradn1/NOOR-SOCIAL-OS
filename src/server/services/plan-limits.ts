@@ -84,3 +84,10 @@ export async function usageSummary(organizationId: string, db = getDb()): Promis
     })),
   );
 }
+
+export type PlanFeature = "analytics_import" | "client_workspaces" | "audit_log" | "client_roles";
+
+export async function planHasFeature(organizationId: string, feature: PlanFeature, db: Executor = getDb()): Promise<boolean> {
+  const { rows } = await sql<{ ok: boolean }>`select app.plan_has_feature(${organizationId}::uuid, ${feature}) as ok`.execute(db);
+  return Boolean(rows[0]?.ok);
+}

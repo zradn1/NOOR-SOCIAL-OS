@@ -38,6 +38,11 @@ export const inviteMemberSchema = z.object({
   workspaceRole: z.enum(WORKSPACE_ROLES).optional(),
 });
 
+export const inviteClientGuestSchema = z.object({
+  email: emailSchema,
+  role: z.enum(["editor", "analyst", "viewer"]),
+});
+
 export const changeMemberRoleSchema = z.object({
   userId: z.uuid(),
   role: z.enum(ROLES),

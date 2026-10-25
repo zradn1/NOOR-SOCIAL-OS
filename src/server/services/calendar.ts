@@ -2,7 +2,7 @@ import "server-only";
 import { sql } from "kysely";
 import type { Platform } from "@/lib/platforms/registry";
 import { zonedRangeToUtc, zonedToUtc, type LocalDate } from "@/lib/time/zoned";
-import { assertCan, type WorkspaceContext } from "@/server/auth/context";
+import { assertCan, type WorkspaceContext } from "@/server/auth/guard";
 import { getDb, withUser } from "@/server/db/client";
 import { notFound } from "@/server/errors";
 

@@ -16,7 +16,7 @@ import {
   updateWorkspaceAction,
 } from "@/server/actions/settings";
 
-function TimeZoneSelect({ id, value, zones, disabled }: { id: string; value: string; zones: string[]; disabled?: boolean }) {
+export function TimeZoneSelect({ id, value, zones, disabled }: { id: string; value: string; zones: string[]; disabled?: boolean }) {
   return (
     <Select id={id} name="timezone" defaultValue={value} disabled={disabled}>
       {zones.map((tz) => (

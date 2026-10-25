@@ -21,7 +21,8 @@ export async function contextFor(db: TestDb, userId: string, workspaceId: string
                from organization_members om
                left join workspace_members wm on wm.workspace_id = w.id and wm.user_id = om.user_id
               where om.organization_id = w.organization_id and om.user_id = $1) as role,
-            (select role::text from organization_members where organization_id = w.organization_id and user_id = $1) as org_role
+            (select role::text from organization_members where organization_id = w.organization_id and user_id = $1) as org_role,
+            coalesce((select is_client_guest from organization_members where organization_id = w.organization_id and user_id = $1), false) as is_client_guest
        from workspaces w join organizations o on o.id = w.organization_id join profiles p on p.id = $1
       where w.id = $2`,
     [userId, workspaceId],
@@ -44,5 +45,6 @@ export async function contextFor(db: TestDb, userId: string, workspaceId: string
     organization: { id: r.organization_id, name: r.org_name, slug: r.org_slug },
     role: r.role as Role,
     orgRole: r.org_role as Role,
+    isClientGuest: r.is_client_guest,
   };
 }

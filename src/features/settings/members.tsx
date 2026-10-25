@@ -66,7 +66,8 @@ export function OrganizationMembersTable({
         <TBody>
           {members.map((m) => {
             const isSelf = m.userId === currentUserId;
-            const editable = !isSelf && roles.includes(m.role);
+            const editable = !isSelf && roles.includes(m.role) && !m.isClientGuest;
+            const removable = !isSelf && roles.includes(m.role);
             // The last owner can't leave; ownership must be transferred first.
             const canLeave = isSelf && !(m.role === "owner" && ownerCount === 1);
             return (
@@ -84,7 +85,11 @@ export function OrganizationMembersTable({
                   </div>
                 </TD>
                 <TD>
-                  {editable ? (
+                  {m.isClientGuest ? (
+                    <Badge tone="info" title="Access to one client workspace only">
+                      Client guest
+                    </Badge>
+                  ) : editable ? (
                     <Select
                       aria-label={`Role for ${m.email}`}
                       defaultValue={m.role}
@@ -110,7 +115,7 @@ export function OrganizationMembersTable({
                   {m.role === "owner" || m.role === "admin" ? "All" : m.workspaceCount}
                 </TD>
                 <TD className="text-right">
-                  {editable || canLeave ? (
+                  {removable || canLeave ? (
                     <Button
                       variant="ghost"
                       size="icon-sm"
@@ -168,7 +173,7 @@ export function InvitationsCard({
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-[13px] text-fg">{inv.email}</p>
                   <p className="text-xs text-fg-muted">
-                    {ROLE_LABEL[inv.role]}
+                    {inv.clientGuest ? "Client guest" : ROLE_LABEL[inv.role]}
                     {inv.workspaceCount ? ` · ${inv.workspaceCount} workspace${inv.workspaceCount > 1 ? "s" : ""}` : ""} · expires{" "}
                     {formatRelative(inv.expiresAt, now)}
                   </p>
@@ -339,7 +344,7 @@ export function WorkspaceAccessTable({
                     </div>
                   </div>
                 </TD>
-                <TD className="hidden sm:table-cell">{ROLE_LABEL[r.orgRole]}</TD>
+                <TD className="hidden sm:table-cell">{r.isClientGuest ? "Client guest" : ROLE_LABEL[r.orgRole]}</TD>
                 <TD>
                   {inherited ? (
                     <Badge tone="gold">{ROLE_LABEL[r.orgRole]} · inherited</Badge>
@@ -357,8 +362,8 @@ export function WorkspaceAccessTable({
                         )
                       }
                     >
-                      <option value="">No access</option>
-                      {WORKSPACE_ROLES.map((role) => (
+                      {r.isClientGuest ? null : <option value="">No access</option>}
+                      {WORKSPACE_ROLES.filter((role) => !r.isClientGuest || role !== "admin").map((role) => (
                         <option key={role} value={role}>
                           {ROLE_LABEL[role]}
                         </option>
