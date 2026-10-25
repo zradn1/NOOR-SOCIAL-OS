@@ -13,6 +13,8 @@ export const RATE_LIMITS = {
   invitation: { windowSeconds: 3600, max: 30 },
   cron: { windowSeconds: 60, max: 30 },
   webhook: { windowSeconds: 60, max: 300 },
+  billing: { windowSeconds: 600, max: 10 },
+  adminAction: { windowSeconds: 60, max: 30 },
 } as const;
 
 export type RateLimitName = keyof typeof RATE_LIMITS;
