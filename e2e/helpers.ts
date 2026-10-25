@@ -44,3 +44,24 @@ export function lastEmailedLink(email: string) {
   expect(line, `no email sent to ${email}`).toBeTruthy();
   return line!.split("\t")[3]!;
 }
+
+/** Direct database access for test setup and assertions (never used by the app under test). */
+export async function sql<T extends Record<string, unknown>>(text: string, params: unknown[] = []): Promise<T[]> {
+  const { Client } = await import("pg");
+  const client = new Client({ connectionString: process.env.E2E_DATABASE_URL ?? "postgresql://postgres:postgres@127.0.0.1:5432/noor_e2e" });
+  await client.connect();
+  try {
+    return (await client.query(text, params)).rows as T[];
+  } finally {
+    await client.end();
+  }
+}
+
+/** Changes an organization's plan the way a platform admin would (test setup only). */
+export async function setPlanForWorkspace(slug: string, planId: string) {
+  await sql(
+    `update subscriptions set plan_id = $2, provider = case when $2 = 'free' then 'none' else 'manual' end
+      where organization_id = (select organization_id from workspaces where slug = $1)`,
+    [slug, planId],
+  );
+}

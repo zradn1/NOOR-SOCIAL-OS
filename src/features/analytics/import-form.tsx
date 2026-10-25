@@ -2,7 +2,7 @@
 
 import { Download, FileUp } from "lucide-react";
 import Link from "next/link";
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { describedBy, Field } from "@/components/ui/field";
@@ -26,6 +26,7 @@ export function MetricsImportForm({ slug, accounts, today }: { slug: string; acc
   const [done, setDone] = useState<{ rows: number; warnings: string[] } | null>(null);
   const [pending, startTransition] = useTransition();
   const toast = useToast();
+  const fileInput = useRef<HTMLInputElement>(null);
   const account = accounts.find((a) => a.id === accountId);
 
   // The preview runs the same parser the server uses; the server re-checks everything.
@@ -48,6 +49,11 @@ export function MetricsImportForm({ slug, accounts, today }: { slug: string; acc
     setFileError(null);
     setFile({ name: picked.name, size: picked.size, text: await picked.text() });
   }
+
+  // A file chosen before the page finished loading never fired onChange.
+  useEffect(() => {
+    if (fileInput.current?.files?.length) void onFile(fileInput.current);
+  }, []);
 
   function downloadTemplate() {
     if (!account) return;
@@ -102,6 +108,7 @@ export function MetricsImportForm({ slug, accounts, today }: { slug: string; acc
           error={fileError ?? undefined}
         >
           <input
+            ref={fileInput}
             id="import-file"
             type="file"
             accept=".csv,text/csv"

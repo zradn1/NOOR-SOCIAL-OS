@@ -46,6 +46,12 @@ export default defineConfig({
         TOKEN_ENCRYPTION_ACTIVE_KEY_ID: "v1",
         // Every test signs up from the same IP.
         RATE_LIMIT_MULTIPLIER: "100",
+        // Stripe in test mode with fake keys: webhook signatures are verified
+        // locally; no request leaves the machine in these tests.
+        BILLING_PROVIDER: "stripe",
+        STRIPE_SECRET_KEY: "sk_test_e2e_not_a_real_key",
+        STRIPE_WEBHOOK_SECRET: "whsec_e2e_secret",
+        STRIPE_PRICE_PRO: "price_e2e_pro",
       },
       reuseExistingServer: false,
       timeout: 60_000,
