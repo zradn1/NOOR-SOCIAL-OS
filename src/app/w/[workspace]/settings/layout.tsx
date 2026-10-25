@@ -12,7 +12,7 @@ export default async function SettingsLayout({ children, params }: LayoutProps<"
         title="Settings"
         description="Workspace details, who has access, your organization, and your profile."
       />
-      <SettingsTabs showOrganization={permits(ctx, "org.members")} />
+      <SettingsTabs showOrganization={permits(ctx, "org.members")} showAudit={permits(ctx, "org.audit.view")} />
       <div className="space-y-6">{children}</div>
     </div>
   );

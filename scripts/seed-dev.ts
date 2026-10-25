@@ -106,6 +106,8 @@ async function main() {
       })
       .execute();
     await trx.updateTable("profiles").set({ default_workspace_id: org.workspace_id }).where("id", "=", ids.owner).execute();
+    // Local only: the owner can open /admin. In production use `pnpm admin:grant`.
+    await trx.insertInto("platform_admins").values({ user_id: ids.owner, note: "local dev seed" }).execute();
   });
 
   const ctx: WorkspaceContext = {
@@ -132,7 +134,7 @@ async function main() {
     [
       "Seeded local development data.",
       `  Password for every user: ${PASSWORD}`,
-      `  Owner:  ${USERS.owner.email}  → /w/${org.workspace_slug}/dashboard`,
+      `  Owner:  ${USERS.owner.email}  → /w/${org.workspace_slug}/dashboard (also platform admin: /admin)`,
       `  Editor: ${USERS.editor.email}`,
       `  Client guest (Riad Botanica only): ${USERS.guest.email}`,
       `  Clients: /w/${botanica.workspace_slug}, /w/${atlas.workspace_slug}`,

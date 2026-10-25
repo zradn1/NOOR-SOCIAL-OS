@@ -11,6 +11,7 @@ export const metadata: Metadata = { title: "Sign in" };
 const ERRORS: Record<string, string> = {
   "link-expired": "That link is invalid or has expired. Request a new one.",
   "not-configured": "Authentication isn't configured for this deployment yet.",
+  suspended: "This account is suspended. Contact Noor Studio support if you think this is a mistake.",
 };
 
 async function SignInContent({ searchParams }: Pick<PageProps<"/sign-in">, "searchParams">) {
