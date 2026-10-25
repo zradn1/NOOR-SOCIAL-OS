@@ -65,7 +65,7 @@ export function StatTile({
   return (
     <div
       className={cn(
-        "flex min-h-32 flex-col justify-between gap-3 rounded-lg border border-line bg-surface p-5 shadow-[var(--shadow-card)]",
+        "flex min-h-32 flex-col justify-between gap-3 rounded-lg border border-line bg-surface bg-[linear-gradient(180deg,rgb(244_239_228/0.03),transparent_50%)] p-5 shadow-[var(--shadow-card)]",
         className,
       )}
     >

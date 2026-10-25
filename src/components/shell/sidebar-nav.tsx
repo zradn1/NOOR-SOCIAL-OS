@@ -51,14 +51,17 @@ export function SidebarNav({ sections, onNavigate }: { sections: NavSection[]; o
                     onClick={onNavigate}
                     aria-current={active ? "page" : undefined}
                     className={cn(
-                      "group relative flex h-9 items-center gap-3 rounded-md px-3 text-[13px] font-medium transition-colors",
+                      "group relative flex h-9 items-center gap-3 rounded-lg px-3 text-[13px] font-medium transition-colors",
                       active
-                        ? "bg-surface-raised text-fg shadow-[var(--shadow-card)]"
+                        ? "bg-gradient-to-r from-gold-400/[0.14] via-surface-raised/80 to-surface-raised/40 text-fg shadow-[inset_0_1px_0_rgb(255_255_255/0.04)]"
                         : "text-fg-muted hover:bg-surface-raised/60 hover:text-fg-secondary",
                     )}
                   >
                     {active ? (
-                      <span aria-hidden="true" className="absolute top-2 bottom-2 left-0 w-px rounded-full bg-gold-400" />
+                      <span
+                        aria-hidden="true"
+                        className="absolute top-2 bottom-2 left-0 w-0.5 rounded-full bg-gold-300 shadow-[0_0_10px_rgb(217_191_143/0.8)]"
+                      />
                     ) : null}
                     <Icon
                       aria-hidden="true"

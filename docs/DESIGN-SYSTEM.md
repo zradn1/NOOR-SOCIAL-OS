@@ -23,9 +23,31 @@ Typography: **Instrument Serif** for page titles and marketing display text only
 **Geist Mono** for identifiers. Tables and axes use tabular figures.
 Standalone figures stay proportional.
 
-Motion: Framer Motion for toasts and small entrances. `MotionConfig
-reducedMotion="user"` plus a global `prefers-reduced-motion` rule disable
-non-essential animation.
+Motion: Framer Motion for toasts, scroll-linked marketing effects, and small
+entrances. `MotionConfig reducedMotion="user"` plus a global
+`prefers-reduced-motion` rule disable non-essential animation.
+
+### Light and material
+
+NOOR means light: surfaces are lit by one warm source, edges catch it, and a
+fine grain keeps large gradients from banding. Decorative layers are always
+`aria-hidden` and `pointer-events-none`.
+
+| Utility | Use |
+| --- | --- |
+| `eclipse` + `animate-orbit` | The brand's lit ring. Hero, final call to action, auth panel |
+| `grain` | Film-grain overlay on large gradient areas |
+| `bg-grid` + `mask-radial-top` | Hairline grid that fades out from the top |
+| `glass` | Frosted floating chrome: marketing navigation, pills, secondary hero buttons |
+| `edge-light` | Gradient hairline inside a positioned element without its own border (bento cards, product frame, auth card) |
+| `spotlight` | Pointer-following warm light, driven by `<Spotlight>` |
+| `text-champagne` | Gradient for display words in Instrument Serif italic. Never on UI text or numbers |
+| `reveal` | Scroll-driven entrance. Content stays visible where scroll timelines aren't supported and under reduced motion |
+| `mask-fade-x`, `mask-fade-b` | Soft edges for the platform marquee and beams |
+
+The landing page (`src/features/marketing`) illustrates the product with
+made-up numbers, so every illustration carries a "Demo data" or "Example output"
+label, and the product frame has a caption saying the data is simulated.
 
 ## Data visualization
 

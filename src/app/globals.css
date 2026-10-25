@@ -89,8 +89,8 @@
   --radius-xs: 0.25rem;
   --radius-sm: 0.375rem;
   --radius-md: 0.625rem;
-  --radius-lg: 0.875rem;
-  --radius-xl: 1.25rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
 
   /* Elevation: restrained, mostly hairline + a soft drop */
   --shadow-card: inset 0 1px 0 rgb(255 255 255 / 0.03), 0 1px 2px rgb(0 0 0 / 0.5);
@@ -102,6 +102,11 @@
   --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
   --animate-fade-in: fade-in 240ms var(--ease-out-quint) both;
   --animate-shimmer: shimmer 1.6s linear infinite;
+  --animate-rise: rise 900ms var(--ease-out-quint) both;
+  --animate-orbit: orbit 48s linear infinite;
+  --animate-marquee: marquee 38s linear infinite;
+  --animate-beam: beam 7s var(--ease-out-quint) infinite;
+  --animate-breathe: breathe 6s ease-in-out infinite;
 
   @keyframes fade-in {
     from {
@@ -122,6 +127,70 @@
       background-position: 200% 0;
     }
   }
+
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(18px);
+      filter: blur(6px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+      filter: none;
+    }
+  }
+
+  @keyframes orbit {
+    to {
+      rotate: 360deg;
+    }
+  }
+
+  @keyframes marquee {
+    to {
+      translate: -50% 0;
+    }
+  }
+
+  @keyframes beam {
+    0% {
+      opacity: 0;
+      translate: 0 -40%;
+    }
+    25% {
+      opacity: 1;
+    }
+    70%,
+    100% {
+      opacity: 0;
+      translate: 0 140%;
+    }
+  }
+
+  @keyframes breathe {
+    0%,
+    100% {
+      opacity: 0.7;
+      scale: 1;
+    }
+    50% {
+      opacity: 1;
+      scale: 1.04;
+    }
+  }
+}
+
+/* Used by the scroll-driven `reveal` utility, so it lives outside @theme. */
+@keyframes reveal-up {
+  from {
+    opacity: 0;
+    translate: 0 28px;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
 }
 
 @layer base {
@@ -136,6 +205,8 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
+    scroll-behavior: smooth;
+    scroll-padding-top: 6rem;
   }
 
   body {
@@ -237,4 +308,125 @@
 @utility scrollbar-thin {
   scrollbar-width: thin;
   scrollbar-color: var(--color-line-strong) transparent;
+}
+
+/* -----------------------------------------------------------------------------
+ * Light and material. NOOR means light: surfaces are lit by a single warm
+ * source, edges catch it, and a fine grain keeps large gradients from banding.
+ * Decorative layers using these are always aria-hidden and pointer-events-none.
+ * -------------------------------------------------------------------------- */
+
+/* Film grain overlay. */
+@utility grain {
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.55 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 160px 160px;
+  opacity: 0.05;
+}
+
+/* Hairline grid, usually faded out with a mask. */
+@utility bg-grid {
+  background-image:
+    linear-gradient(to right, rgb(244 239 228 / 0.045) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(244 239 228 / 0.045) 1px, transparent 1px);
+  background-size: 56px 56px;
+}
+
+/* Frosted panel for floating chrome (navigation, overlays on imagery). */
+@utility glass {
+  background: rgb(18 18 17 / 0.58);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  backdrop-filter: blur(18px) saturate(140%);
+  border: 1px solid var(--color-line);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.05),
+    0 16px 48px -20px rgb(0 0 0 / 0.85);
+}
+
+/* A lit gradient hairline drawn inside the element's edge. The element must be
+   positioned (relative/absolute) and should not also carry a border. */
+@utility edge-light {
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    padding: 1px;
+    border-radius: inherit;
+    background: linear-gradient(
+      170deg,
+      rgb(244 239 228 / 0.2),
+      rgb(244 239 228 / 0.05) 38%,
+      rgb(244 239 228 / 0.03) 70%,
+      rgb(201 164 106 / 0.28)
+    );
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask:
+      linear-gradient(#000 0 0) content-box exclude,
+      linear-gradient(#000 0 0);
+    pointer-events: none;
+  }
+}
+
+/* Pointer-following warm light; --spot-x/--spot-y are set by <Spotlight>. */
+@utility spotlight {
+  background-image: radial-gradient(
+    28rem circle at var(--spot-x, 50%) var(--spot-y, -30%),
+    rgb(201 164 106 / 0.1),
+    transparent 45%
+  );
+}
+
+/* Champagne gradient for display type. */
+@utility text-champagne {
+  background: linear-gradient(100deg, #f3e9d6 0%, #d9bf8f 38%, #c9a46a 62%, #f3e9d6 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* The NOOR eclipse: a thin lit ring. Pair with animate-orbit to turn it. */
+@utility eclipse {
+  border-radius: 9999px;
+  background: conic-gradient(
+    from 200deg,
+    transparent 0deg,
+    rgb(185 188 194 / 0.2) 50deg,
+    rgb(243 233 214 / 0.9) 118deg,
+    rgb(201 164 106 / 0.65) 150deg,
+    transparent 232deg,
+    rgb(185 188 194 / 0.24) 300deg,
+    transparent 360deg
+  );
+  -webkit-mask: radial-gradient(closest-side, transparent calc(100% - 2px), #000 calc(100% - 1.5px));
+  mask: radial-gradient(closest-side, transparent calc(100% - 2px), #000 calc(100% - 1.5px));
+}
+
+@utility mask-fade-x {
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+}
+
+@utility mask-fade-b {
+  -webkit-mask-image: linear-gradient(180deg, #000 55%, transparent);
+  mask-image: linear-gradient(180deg, #000 55%, transparent);
+}
+
+@utility mask-radial-top {
+  -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 0%, #000 30%, transparent 75%);
+  mask-image: radial-gradient(ellipse 70% 60% at 50% 0%, #000 30%, transparent 75%);
+}
+
+/* Scroll-driven entrance. Content is fully visible without support for scroll
+   timelines and when the visitor prefers reduced motion. */
+@utility reveal {
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      animation: reveal-up linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 24%;
+    }
+  }
 }
