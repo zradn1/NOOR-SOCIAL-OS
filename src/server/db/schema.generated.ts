@@ -5,6 +5,18 @@
 
 import type { ColumnType } from "kysely";
 
+export type AnalyticsSource = "demo" | "manual_import" | "provider_sync";
+
+export type ConnectionStatus =
+  | "connected"
+  | "demo"
+  | "disconnected"
+  | "error"
+  | "expired"
+  | "manual"
+  | "pending"
+  | "revoked";
+
 export type Generated<T> =
   T extends ColumnType<infer S, infer I, infer U>
     ? ColumnType<S, I | undefined, U>
@@ -15,6 +27,15 @@ export type Int8 = ColumnType<
   bigint | number | string,
   bigint | number | string
 >;
+
+export type JobStatus =
+  | "blocked"
+  | "cancelled"
+  | "failed"
+  | "pending"
+  | "running"
+  | "simulated"
+  | "succeeded";
 
 export type Json = JsonValue;
 
@@ -30,6 +51,26 @@ export type JsonValue = JsonArray | JsonObject | JsonPrimitive;
 
 export type MemberRole = "admin" | "analyst" | "editor" | "owner" | "viewer";
 
+export type PostStatus =
+  | "archived"
+  | "draft"
+  | "failed"
+  | "partially_published"
+  | "published"
+  | "publishing"
+  | "ready"
+  | "scheduled"
+  | "simulated";
+
+export type SocialPlatform =
+  | "facebook"
+  | "instagram"
+  | "linkedin"
+  | "pinterest"
+  | "tiktok"
+  | "x"
+  | "youtube";
+
 export type SubscriptionStatus =
   | "active"
   | "canceled"
@@ -39,6 +80,17 @@ export type SubscriptionStatus =
   | "paused"
   | "trialing"
   | "unpaid";
+
+export type TargetStatus =
+  | "blocked"
+  | "cancelled"
+  | "failed"
+  | "pending"
+  | "published"
+  | "publishing"
+  | "queued"
+  | "scheduled"
+  | "simulated";
 
 export type Timestamp = ColumnType<Date, Date | string, Date | string>;
 
@@ -51,6 +103,47 @@ export type UsageMetric =
 export type WorkspaceKind = "client" | "internal";
 
 export type WorkspaceRole = "admin" | "analyst" | "editor" | "viewer";
+
+export interface AiGenerations {
+  created_at: Generated<Timestamp>;
+  id: Generated<string>;
+  input: Json;
+  is_demo_output: boolean;
+  model: string | null;
+  output: Json;
+  provider: string;
+  task: string;
+  user_id: string | null;
+  workspace_id: string;
+}
+
+export interface AnalyticsSnapshots {
+  captured_at: Generated<Timestamp>;
+  clicks: Int8 | null;
+  comments: Int8 | null;
+  created_at: Generated<Timestamp>;
+  data_source: AnalyticsSource;
+  followers: Int8 | null;
+  following: Int8 | null;
+  id: Generated<Int8>;
+  import_batch_id: string | null;
+  impressions: Int8 | null;
+  is_demo: Generated<boolean>;
+  likes: Int8 | null;
+  metric_date: Timestamp;
+  platform: SocialPlatform;
+  posts_count: Int8 | null;
+  profile_views: Int8 | null;
+  raw: Generated<Json>;
+  reach: Int8 | null;
+  saves: Int8 | null;
+  shares: Int8 | null;
+  social_account_id: string;
+  target_id: string | null;
+  views: Int8 | null;
+  watch_time_seconds: Int8 | null;
+  workspace_id: string;
+}
 
 export interface AuditLogs {
   action: string;
@@ -82,6 +175,51 @@ export interface BillingEvents {
   type: string;
 }
 
+export interface ContentPosts {
+  caption: Generated<string>;
+  created_at: Generated<Timestamp>;
+  created_by: string | null;
+  deleted_at: Timestamp | null;
+  first_comment: string | null;
+  hashtags: Generated<string[]>;
+  id: Generated<string>;
+  is_demo: Generated<boolean>;
+  link_url: string | null;
+  published_at: Timestamp | null;
+  revision: Generated<number>;
+  schedule_timezone: string | null;
+  scheduled_at: Timestamp | null;
+  status: Generated<PostStatus>;
+  title: string | null;
+  updated_at: Generated<Timestamp>;
+  updated_by: string | null;
+  workspace_id: string;
+}
+
+export interface MediaAssets {
+  alt_text: string | null;
+  checksum_sha256: string | null;
+  created_at: Generated<Timestamp>;
+  deleted_at: Timestamp | null;
+  duration_ms: number | null;
+  external_url: string | null;
+  file_name: string | null;
+  height: number | null;
+  id: Generated<string>;
+  is_demo: Generated<boolean>;
+  kind: string;
+  mime_type: string;
+  size_bytes: Int8 | null;
+  source: string;
+  storage_bucket: string | null;
+  storage_path: string | null;
+  updated_at: Generated<Timestamp>;
+  upload_status: Generated<string>;
+  uploaded_by: string | null;
+  width: number | null;
+  workspace_id: string;
+}
+
 export interface Notifications {
   body: string | null;
   created_at: Generated<Timestamp>;
@@ -94,6 +232,39 @@ export interface Notifications {
   title: string;
   user_id: string;
   workspace_id: string | null;
+}
+
+export interface OauthConnections {
+  access_token_ciphertext: string | null;
+  access_token_expires_at: Timestamp | null;
+  created_at: Generated<Timestamp>;
+  id: Generated<string>;
+  key_id: string;
+  last_refreshed_at: Timestamp | null;
+  provider: SocialPlatform;
+  provider_user_id: string | null;
+  refresh_failure_count: Generated<number>;
+  refresh_token_ciphertext: string | null;
+  refresh_token_expires_at: Timestamp | null;
+  revoked_at: Timestamp | null;
+  scopes: Generated<string[]>;
+  social_account_id: string;
+  token_type: string | null;
+  updated_at: Generated<Timestamp>;
+  workspace_id: string;
+}
+
+export interface OauthStates {
+  code_verifier_ciphertext: string;
+  consumed_at: Timestamp | null;
+  created_at: Generated<Timestamp>;
+  expires_at: Timestamp;
+  id: Generated<string>;
+  platform: SocialPlatform;
+  redirect_path: string;
+  state_hash: string;
+  user_id: string;
+  workspace_id: string;
 }
 
 export interface OrganizationInvitations {
@@ -138,6 +309,32 @@ export interface PlatformAdmins {
   user_id: string;
 }
 
+export interface PostMedia {
+  created_at: Generated<Timestamp>;
+  media_asset_id: string;
+  position: number;
+  post_id: string;
+  workspace_id: string;
+}
+
+export interface PostPlatformTargets {
+  caption_override: string | null;
+  created_at: Generated<Timestamp>;
+  external_post_id: string | null;
+  external_url: string | null;
+  id: Generated<string>;
+  is_demo: Generated<boolean>;
+  last_error: string | null;
+  platform: SocialPlatform;
+  post_id: string;
+  published_at: Timestamp | null;
+  settings: Generated<Json>;
+  social_account_id: string;
+  status: Generated<TargetStatus>;
+  updated_at: Generated<Timestamp>;
+  workspace_id: string;
+}
+
 export interface Profiles {
   created_at: Generated<Timestamp>;
   default_workspace_id: string | null;
@@ -148,10 +345,53 @@ export interface Profiles {
   updated_at: Generated<Timestamp>;
 }
 
+export interface PublishingJobs {
+  attempts: Generated<number>;
+  completed_at: Timestamp | null;
+  created_at: Generated<Timestamp>;
+  created_by: string | null;
+  error_code: string | null;
+  id: Generated<string>;
+  idempotency_key: string;
+  is_demo: Generated<boolean>;
+  last_error: string | null;
+  locked_at: Timestamp | null;
+  locked_by: string | null;
+  max_attempts: Generated<number>;
+  post_id: string;
+  provider_response: Json | null;
+  run_at: Timestamp;
+  status: Generated<JobStatus>;
+  target_id: string;
+  updated_at: Generated<Timestamp>;
+  workspace_id: string;
+}
+
 export interface RateLimitBuckets {
   hits: Generated<number>;
   key: string;
   window_start: Timestamp;
+}
+
+export interface SocialAccounts {
+  connected_at: Timestamp | null;
+  connected_by: string | null;
+  connection_status: ConnectionStatus;
+  created_at: Generated<Timestamp>;
+  deleted_at: Timestamp | null;
+  disconnected_at: Timestamp | null;
+  display_name: string;
+  external_account_id: string;
+  granted_scopes: Generated<string[]>;
+  handle: string | null;
+  id: Generated<string>;
+  is_demo: Generated<boolean>;
+  last_error: string | null;
+  last_synced_at: Timestamp | null;
+  organization_id: string;
+  platform: SocialPlatform;
+  updated_at: Generated<Timestamp>;
+  workspace_id: string;
 }
 
 export interface SubscriptionPlans {
@@ -229,15 +469,25 @@ export interface Workspaces {
 }
 
 export interface DB {
+  ai_generations: AiGenerations;
+  analytics_snapshots: AnalyticsSnapshots;
   audit_logs: AuditLogs;
   billing_events: BillingEvents;
+  content_posts: ContentPosts;
+  media_assets: MediaAssets;
   notifications: Notifications;
+  oauth_connections: OauthConnections;
+  oauth_states: OauthStates;
   organization_invitations: OrganizationInvitations;
   organization_members: OrganizationMembers;
   organizations: Organizations;
   platform_admins: PlatformAdmins;
+  post_media: PostMedia;
+  post_platform_targets: PostPlatformTargets;
   profiles: Profiles;
+  publishing_jobs: PublishingJobs;
   rate_limit_buckets: RateLimitBuckets;
+  social_accounts: SocialAccounts;
   subscription_plans: SubscriptionPlans;
   subscriptions: Subscriptions;
   system_heartbeats: SystemHeartbeats;
