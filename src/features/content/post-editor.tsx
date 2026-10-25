@@ -50,6 +50,8 @@ type Props = {
   plannedLocal: { date: string; time: string } | null;
   scheduledLabel: string | null;
   permissions: { edit: boolean; schedule: boolean; retry: boolean; delete: boolean };
+  /** Starting values for a new post, e.g. from an AI Assistant result. */
+  initial?: { title: string | null; caption: string; hashtags: string[]; platform: Platform | null } | null;
 };
 
 const LOCKED_STATUSES = new Set(["publishing", "published", "partially_published", "simulated"]);
@@ -60,17 +62,22 @@ export function PostEditor(props: Props) {
   const toast = useToast();
   const [pending, startTransition] = useTransition();
 
-  const [title, setTitle] = useState(post?.title ?? "");
-  const [caption, setCaption] = useState(post?.caption ?? "");
-  const [hashtags, setHashtags] = useState<string[]>(post?.hashtags ?? []);
+  const initial = post ? null : props.initial;
+  const [title, setTitle] = useState(post?.title ?? initial?.title ?? "");
+  const [caption, setCaption] = useState(post?.caption ?? initial?.caption ?? "");
+  const [hashtags, setHashtags] = useState<string[]>(post?.hashtags ?? initial?.hashtags ?? []);
   const [firstComment, setFirstComment] = useState(post?.firstComment ?? "");
   const [linkUrl, setLinkUrl] = useState(post?.linkUrl ?? "");
   const [plannedDate, setPlannedDate] = useState(props.plannedLocal?.date ?? "");
   const [plannedTime, setPlannedTime] = useState(props.plannedLocal?.time ?? "09:00");
   const [media, setMedia] = useState<MediaView[]>(post?.media ?? []);
-  const [selected, setSelected] = useState<Map<string, string>>(
-    () => new Map((post?.targets ?? []).filter((t) => t.status !== "cancelled").map((t) => [t.accountId, t.captionOverride ?? ""])),
-  );
+  const [selected, setSelected] = useState<Map<string, string>>(() => {
+    if (!post && initial?.platform) {
+      const match = destinations.find((d) => d.platform === initial.platform);
+      return new Map(match ? [[match.id, ""]] : []);
+    }
+    return new Map((post?.targets ?? []).filter((t) => t.status !== "cancelled").map((t) => [t.accountId, t.captionOverride ?? ""]));
+  });
   const [revision, setRevision] = useState(post?.revision ?? 0);
   const [dirty, setDirty] = useState(!post);
   const [conflict, setConflict] = useState(false);

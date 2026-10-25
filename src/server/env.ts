@@ -45,7 +45,8 @@ const schema = z.object({
   // AI
   AI_PROVIDER: z.enum(["auto", "anthropic", "demo"]).default("auto"),
   ANTHROPIC_API_KEY: optional,
-  ANTHROPIC_MODEL: z.string().default("claude-sonnet-5-5"),
+  ANTHROPIC_MODEL: z.string().default("claude-opus-5-5"),
+  ANTHROPIC_EFFORT: z.enum(["low", "medium", "high", "xhigh", "max"]).default("medium"),
 
   // Billing
   BILLING_PROVIDER: z.enum(["none", "stripe"]).default("none"),
