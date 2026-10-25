@@ -130,7 +130,7 @@ export interface AnalyticsSnapshots {
   impressions: Int8 | null;
   is_demo: Generated<boolean>;
   likes: Int8 | null;
-  metric_date: Timestamp;
+  metric_date: string;
   platform: SocialPlatform;
   posts_count: Int8 | null;
   profile_views: Int8 | null;
@@ -185,6 +185,7 @@ export interface ContentPosts {
   id: Generated<string>;
   is_demo: Generated<boolean>;
   link_url: string | null;
+  planned_for: Timestamp | null;
   published_at: Timestamp | null;
   revision: Generated<number>;
   schedule_timezone: string | null;

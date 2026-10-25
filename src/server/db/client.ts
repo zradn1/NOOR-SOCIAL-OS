@@ -11,6 +11,9 @@ export type Executor = Kysely<DB> | Tx;
 // int8 (bigint) counts come back as strings by default; our counts fit safely
 // in a JS number.
 types.setTypeParser(20, (value) => Number.parseInt(value, 10));
+// `date` columns stay "YYYY-MM-DD" strings. The default parser builds a Date at
+// local midnight, which shifts the day on servers outside UTC.
+types.setTypeParser(1082, (value) => value);
 
 const globalForDb = globalThis as unknown as { __noorDb?: Kysely<DB> };
 
