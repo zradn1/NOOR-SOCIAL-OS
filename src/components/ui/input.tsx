@@ -47,17 +47,26 @@ export function Select({ className, children, ...props }: ComponentProps<"select
 }
 
 export function Checkbox({ className, ...props }: Omit<ComponentProps<"input">, "type">) {
+  // The check mark is a sibling SVG revealed with `peer-checked`, so the
+  // filled state never depends on merging background utilities.
   return (
-    <input
-      type="checkbox"
-      className={cn(
-        "size-4 shrink-0 cursor-pointer appearance-none rounded-xs border border-line-strong bg-sunken",
-        "checked:border-gold-400 checked:bg-gold-400",
-        "checked:bg-[url(\"data:image/svg+xml,%3Csvg viewBox='0 0 16 16' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M4 8.5l2.5 2.5L12 5.5' fill='none' stroke='%231a1408' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E\")]",
-        "disabled:cursor-not-allowed disabled:opacity-50",
-        className,
-      )}
-      {...props}
-    />
+    <span className={cn("relative inline-grid size-4 shrink-0 place-items-center", className)}>
+      <input
+        type="checkbox"
+        className={cn(
+          "peer size-4 cursor-pointer appearance-none rounded-xs border border-line-strong bg-sunken transition-colors",
+          "checked:border-gold-400 checked:bg-gold-400 hover:border-silver-500",
+          "disabled:cursor-not-allowed disabled:opacity-50",
+        )}
+        {...props}
+      />
+      <svg
+        aria-hidden="true"
+        viewBox="0 0 16 16"
+        className="pointer-events-none absolute size-3 text-gold-ink opacity-0 peer-checked:opacity-100"
+      >
+        <path d="M4 8.5l2.5 2.5L12 5.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    </span>
   );
 }
