@@ -1,22 +1,33 @@
+"use client";
+
+import { useId } from "react";
 import { cn } from "@/lib/utils/cn";
 
-/** The NOOR mark: a crescent of light inside a hairline ring. */
+/**
+ * The NOOR mark: a crescent of light inside a hairline ring. Gradient ids are
+ * unique per instance: the logo appears more than once per page (desktop
+ * sidebar + mobile drawer), and a shared id inside a hidden subtree renders
+ * nothing.
+ */
 export function NoorMark({ className }: { className?: string }) {
+  const id = useId();
+  const ring = `${id}-ring`;
+  const light = `${id}-light`;
   return (
     <svg viewBox="0 0 32 32" aria-hidden="true" className={cn("size-7", className)}>
       <defs>
-        <linearGradient id="noor-ring" x1="0" x2="1" y1="0" y2="1">
+        <linearGradient id={ring} x1="0" x2="1" y1="0" y2="1">
           <stop offset="0" stopColor="#e6e7ea" />
           <stop offset="0.55" stopColor="#8b8f97" />
           <stop offset="1" stopColor="#c9a46a" />
         </linearGradient>
-        <linearGradient id="noor-light" x1="0" x2="0" y1="0" y2="1">
+        <linearGradient id={light} x1="0" x2="0" y1="0" y2="1">
           <stop offset="0" stopColor="#f3e9d6" />
           <stop offset="1" stopColor="#c9a46a" />
         </linearGradient>
       </defs>
-      <circle cx="16" cy="16" r="14.5" fill="#121211" stroke="url(#noor-ring)" strokeWidth="1" />
-      <path d="M19.5 7.8a8.6 8.6 0 1 0 0 16.4 7 7 0 0 1 0-16.4Z" fill="url(#noor-light)" />
+      <circle cx="16" cy="16" r="14.5" fill="#121211" stroke={`url(#${ring})`} strokeWidth="1" />
+      <path d="M19.5 7.8a8.6 8.6 0 1 0 0 16.4 7 7 0 0 1 0-16.4Z" fill={`url(#${light})`} />
     </svg>
   );
 }
