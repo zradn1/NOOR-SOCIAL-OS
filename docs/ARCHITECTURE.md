@@ -101,6 +101,22 @@ The matrix lives in `src/lib/auth/permissions.ts` (UI and server checks). The
 same rank comparisons are implemented in SQL (`app.workspace_role_rank()`), so
 RLS and the server always agree.
 
+### Client guests
+
+People from a client's side (brand managers, approvers) can join an agency's
+organization as **client guests** (Agency plan, feature `client_roles`).
+Enforced in the database:
+
+- `organization_members.is_client_guest` / `organization_invitations.client_guest`;
+  the flag can't be changed through the API.
+- A guest holds at most `editor` rank and can only be assigned to live, non-demo
+  `client` workspaces (trigger `workspace_members_30_guard_client_guest`).
+- Guests see the people who share a workspace with them, never the agency's full
+  roster (`organization_members` and `profiles` policies).
+- The client workspace's admins (not only organization admins) invite, revoke,
+  and remove guests (`app.create_client_invitation` and scoped policies).
+  Guests count toward the plan's member limit.
+
 ### Platform administrators
 
 Noor Studio operators are recorded in `platform_admins`. No API role can read or
@@ -117,14 +133,21 @@ checked server-side for every `/admin` request and action.
   boundary.** Every page, Server Action, and Route Handler re-verifies the session
   and permissions through the data access layer (`src/server/auth/*`).
 - Workspace context comes from the URL (`/w/[workspace]/…`).
-  `requireWorkspaceContext(slug)` loads the workspace **through RLS**. A workspace
+  `requireWorkspace(slug)` loads the workspace **through RLS**. A workspace
   the user cannot access is indistinguishable from one that does not exist (404).
+- Every request also checks `auth.users.banned_until` / `deleted_at`, so a
+  suspension applies on the next request even though the access token hasn't
+  expired. Blocked sessions are cleared at `/auth/blocked`.
+- Session cookies are HttpOnly, SameSite=Lax, and Secure over HTTPS: the browser
+  never needs them, because all auth runs on the server.
 - The last-used workspace is stored in `profiles.default_workspace_id`.
 
 ## 5. Data protection layers
 
 1. **Input validation.** Zod schemas for every Server Action, Route Handler, and webhook.
-2. **Server authorization.** `assertPermission(ctx, permission)` before any service work.
+2. **Server authorization.** `assertCan(ctx, permission)` (`src/server/auth/guard.ts`)
+   before any service work. Services import only the guard, never Next.js request
+   APIs, so they also run in the worker and scripts.
 3. **Row Level Security.** Enabled on every table. Tenant tables use
    `app.*` security-definer helpers (`search_path = ''`) for membership checks.
    System tables (`oauth_connections`, `oauth_states`, `publishing_jobs`,
@@ -233,26 +256,46 @@ Freshness is derived from `captured_at`.
 
 ## 10. AI provider abstraction
 
-`src/server/ai/` defines `AIProvider.generate(task, input)` for captions, hooks,
-ideas, hashtags, campaigns, and platform adaptation. The `anthropic` provider is
-used when `ANTHROPIC_API_KEY` is set. Otherwise the `demo` provider returns
-template-based output marked `isDemo: true`, and the UI says no AI model was
-used. Keys are read only in server modules (`import "server-only"`).
+`src/server/ai/` defines `AiProvider.generate(request, brand)` for captions,
+hooks, ideas, hashtags, campaigns, and platform adaptation.
+
+- **anthropic** (when `ANTHROPIC_API_KEY` is set): the official SDK, model
+  `ANTHROPIC_MODEL` (default `claude-opus-5-5`), explicit effort
+  (`ANTHROPIC_EFFORT`, default `medium`), structured outputs against a shared
+  Zod schema, and server-side refusal fallback (`fallbacks: "default"`). Refusals,
+  truncation, rate limits, and credential errors map to safe user messages.
+- **demo** (no key, or `AI_PROVIDER=demo`): templates built from the user's
+  brief. It never calls a model and is labelled "Demo · no AI" everywhere.
+- Role (`ai.use`, analyst+), per-user rate limit, and the monthly plan quota are
+  checked before any model call. Only model output is metered. Output is
+  sanitized and stored in `ai_generations` (readable by analysts and up).
+- Keys are read only in server modules (`import "server-only"`).
 
 ## 11. Billing provider abstraction
 
-- Plans (`free`, `starter`, `pro`, `agency`) live in `subscription_plans`, with
-  limits mirrored in `src/lib/billing/plans.ts`.
-- Limits are enforced server-side (`assertWithinLimit`) before creating
-  workspaces, connecting accounts, scheduling posts, adding members, and generating AI output.
-- `BillingProvider` has two implementations. `none` is the default: upgrades
-  explain that billing is not configured. `stripe` creates Checkout and Portal
-  sessions and verifies webhooks with HMAC-SHA256, a timestamp tolerance, and a
-  constant-time compare.
-- A subscription changes **only** from a verified webhook event. Events are recorded in
-  `billing_events` (unique provider event id) so replays are no-ops. After
-  checkout the UI shows "Awaiting confirmation from the payment provider", never
-  "Payment succeeded".
+- Plans (`free`, `starter`, `pro`, `agency`) live in `subscription_plans`
+  (limits and features as data). `app.effective_plan_id()` falls back to Free
+  for canceled, unpaid, or incomplete subscriptions.
+- Limits and features are enforced server-side, mostly inside the SQL functions
+  that perform the write (workspaces, members, scheduled posts), plus
+  `assertWithinLimit` / `planHasFeature` in services (AI, imports, client
+  workspaces and guests, audit log via RLS).
+- `BillingProvider` has two modes. `none` is the default: the billing page says
+  payments aren't configured, and plans can be assigned by a platform admin
+  (`provider = 'manual'`). `stripe` uses the official SDK for Checkout and the
+  customer portal.
+- `/api/webhooks/stripe` verifies the signature on the raw body (SDK
+  `constructEvent`, 300-second tolerance), rate-limits, caps body size, and stores
+  only a SHA-256 digest of the payload.
+- A paid plan changes **only** from a verified subscription event:
+  - each event applies once (unique id plus a row lock);
+  - events older than the last applied one are ignored;
+  - subscriptions are re-read from Stripe so out-of-order deliveries settle on
+    the current state;
+  - an organization is never re-linked to another customer;
+  - an unknown price fails loudly and Stripe retries.
+- After checkout the UI says "Waiting for payment confirmation". "Plan
+  confirmed" notifications go out only for `active` or `trialing` subscriptions.
 
 ## 12. Audit logging
 
@@ -260,17 +303,50 @@ used. Keys are read only in server modules (`import "server-only"`).
 through the system connection by `recordAudit()` for administrative actions:
 membership and role changes, invitations, account connect and disconnect, billing
 changes, publishing retries, demo workspace creation, and every platform-admin
-action. Organization owners and admins can read their organization's entries.
+action. Organization owners and admins can read their organization's entries
+when the plan includes `audit_log` (Pro and up). That check runs in RLS as well
+as in the UI. Platform admins see everything in `/admin/audit`.
 
 ## 13. Rate limiting
 
 `app.rate_limit_hit(key, window, max)` implements a fixed-window counter in
 Postgres, so it works across serverless instances without extra infrastructure.
 It is applied to sign-in, sign-up, password recovery, OAuth start, AI generation,
-invitations, and the cron and webhook endpoints. Keys use an HMAC of the IP
-address (`IP_HASH_SECRET`) and never the raw IP.
+invitations, media uploads, checkout and portal sessions, platform-admin
+actions, and the cron and webhook endpoints. Keys use the user id or an HMAC of
+the IP address (`IP_HASH_SECRET`), never the raw IP.
 
-## 14. Source layout
+## 14. HTTP security
+
+- **Content-Security-Policy** on every page, set in `src/proxy.ts` because it
+  includes the runtime Supabase origin for direct uploads. Scripts, styles,
+  fonts, and connections are limited to the app's own origin. Framing, plugins,
+  and cross-origin form posts are blocked.
+- **Trade-off:** Partial Prerendering can't carry per-request nonces, so
+  `script-src` allows `'unsafe-inline'` for Next.js's inline payload scripts.
+  HttpOnly session cookies limit the impact of an injected script.
+- `next.config.ts` adds HSTS, `nosniff`, `X-Frame-Options: DENY`,
+  Referrer-Policy, Permissions-Policy, and COOP to all responses, and removes
+  `X-Powered-By`.
+
+## 15. Platform administration
+
+`/admin` exists only for platform admins; everyone else gets a 404. It covers:
+
+- an overview with health checks (database, worker heartbeat, queue, AI,
+  billing, webhook failures), configuration presence (never values), and
+  integration status;
+- organizations, with manual plan assignment that requires a reason and is
+  refused while a live Stripe subscription exists;
+- users, with suspend and restore through Supabase Auth;
+- failed and blocked jobs across tenants;
+- the platform audit log.
+
+Reads use the privileged connection after the admin check. Every change
+re-verifies admin rights, is rate-limited, and is audited as a
+`platform_admin` action.
+
+## 16. Source layout
 
 ```
 src/
