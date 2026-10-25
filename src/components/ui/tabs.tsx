@@ -42,7 +42,7 @@ export function NavTabs({
 }) {
   const pathname = usePathname();
   return (
-    <nav aria-label="Section" className={cn("flex gap-5 overflow-x-auto border-b border-line scrollbar-thin", className)}>
+    <nav aria-label="Section" className={cn("relative flex gap-5 overflow-x-auto border-b border-line scrollbar-thin", className)}>
       {items.map((item) => {
         const active = item.exact ? pathname === item.href : pathname.startsWith(item.href);
         return (

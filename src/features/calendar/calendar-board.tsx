@@ -158,7 +158,7 @@ export function CalendarBoard({
   return (
     <>
       {error && !selected ? <Alert tone="danger" className="mb-4">{error}</Alert> : null}
-      <div className="overflow-x-auto rounded-lg border border-line bg-surface scrollbar-thin" aria-busy={pending}>
+      <div className="relative overflow-x-auto rounded-lg border border-line bg-surface scrollbar-thin" aria-busy={pending}>
         <div className="grid min-w-[44rem] grid-cols-7 border-b border-line">
           {WEEKDAYS.map((d, i) => (
             <div key={d} className="eyebrow px-3 py-2.5">
