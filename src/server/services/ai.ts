@@ -34,7 +34,7 @@ export async function generateWithAssistant(
   const db = deps.db ?? getDb();
   const provider = deps.provider === undefined ? selectProvider() : deps.provider;
   if (!provider) {
-    throw new AppError("NOT_CONFIGURED", "The AI assistant isn't configured. An administrator needs to set ANTHROPIC_API_KEY or enable demo mode.");
+    throw new AppError("NOT_CONFIGURED", "The AI assistant isn't configured on this deployment yet.");
   }
   if (request.task === "adapt" && request.platforms.length === 0) {
     throw new AppError("VALIDATION", "Choose at least one platform to adapt the caption for.");

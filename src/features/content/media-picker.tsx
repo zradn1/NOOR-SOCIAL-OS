@@ -219,7 +219,7 @@ export function MediaPicker({
               </div>
             ) : (
               <Alert tone="info" title="Uploads aren't configured">
-                File uploads need Supabase Storage (SUPABASE_SERVICE_ROLE_KEY). Attach media by link instead.
+                File uploads aren&apos;t enabled on this deployment yet. Attach media by link instead.
               </Alert>
             )}
           </TabsContent>

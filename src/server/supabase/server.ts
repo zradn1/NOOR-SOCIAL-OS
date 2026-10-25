@@ -2,7 +2,8 @@ import "server-only";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { connection } from "next/server";
-import { supabaseConfig } from "@/server/env";
+import { authCookieOptions } from "@/lib/security/cookies";
+import { env, supabaseConfig } from "@/server/env";
 
 /**
  * Supabase client bound to the request's cookies. Use for Auth only; data
@@ -15,6 +16,7 @@ export async function createSupabaseServerClient() {
   const { url, key } = supabaseConfig();
   const cookieStore = await cookies();
   return createServerClient(url, key, {
+    cookieOptions: authCookieOptions(env().NEXT_PUBLIC_APP_URL),
     cookies: {
       getAll() {
         return cookieStore.getAll();

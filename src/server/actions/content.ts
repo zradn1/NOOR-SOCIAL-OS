@@ -7,6 +7,7 @@ import { z } from "zod";
 import { mediaUrlSchema, scheduleSchema, uploadRequestSchema, type PostInput } from "@/lib/validation/content";
 import { loadWorkspaceForAction } from "@/server/auth/context";
 import { withUser } from "@/server/db/client";
+import { enforceRateLimit } from "@/server/security/rate-limit";
 import { requestMeta } from "@/server/security/request";
 import { recordAudit } from "@/server/services/audit";
 import {
@@ -124,14 +125,18 @@ export async function retryJobAction(slug: string, jobId: string) {
 export async function addMediaByUrlAction(slug: string, input: Record<string, unknown>) {
   return runAction("media.add_url", async () => {
     const ctx = await loadWorkspaceForAction(slugSchema.parse(slug), "media.upload");
-    return addMediaByUrl(ctx, parseInput(mediaUrlSchema, input));
+    const media = parseInput(mediaUrlSchema, input);
+    await enforceRateLimit("media", ctx.user.id);
+    return addMediaByUrl(ctx, media);
   });
 }
 
 export async function createUploadAction(slug: string, input: { fileName: string; mimeType: string; sizeBytes: number }) {
   return runAction("media.create_upload", async () => {
     const ctx = await loadWorkspaceForAction(slugSchema.parse(slug), "media.upload");
-    return createMediaUpload(ctx, parseInput(uploadRequestSchema, input));
+    const upload = parseInput(uploadRequestSchema, input);
+    await enforceRateLimit("media", ctx.user.id);
+    return createMediaUpload(ctx, upload);
   });
 }
 

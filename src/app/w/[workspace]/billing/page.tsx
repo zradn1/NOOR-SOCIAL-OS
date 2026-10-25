@@ -111,7 +111,7 @@ export default async function BillingPage({ params, searchParams }: PageProps<"/
       {!online ? (
         <Alert tone="neutral" title="Online payments aren't configured">
           {status.reason === "missing_keys"
-            ? `Billing is set to Stripe, but ${status.missing.join(" and ")} ${status.missing.length > 1 ? "are" : "is"} missing on the server.`
+            ? "Stripe is selected but not fully set up on this deployment. Plans can be assigned by a Noor Studio administrator in the meantime."
             : "This deployment has no payment provider. Plans can be assigned by a Noor Studio administrator."}
         </Alert>
       ) : null}

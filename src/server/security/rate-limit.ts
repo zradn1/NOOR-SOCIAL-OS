@@ -14,6 +14,7 @@ export const RATE_LIMITS = {
   cron: { windowSeconds: 60, max: 30 },
   webhook: { windowSeconds: 60, max: 300 },
   billing: { windowSeconds: 600, max: 10 },
+  media: { windowSeconds: 600, max: 60 },
   adminAction: { windowSeconds: 60, max: 30 },
 } as const;
 

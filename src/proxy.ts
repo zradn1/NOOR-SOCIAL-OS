@@ -1,5 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { authCookieOptions } from "@/lib/security/cookies";
+import { buildContentSecurityPolicy } from "@/lib/security/csp";
 
 /**
  * Refreshes the Supabase session cookie and keeps anonymous visitors out of
@@ -20,7 +22,25 @@ function runtimeEnv(name: string): string | undefined {
   return process.env[name] || undefined;
 }
 
+function withSecurityHeaders(response: NextResponse, supabaseUrl: string | undefined) {
+  const appUrl = runtimeEnv("NEXT_PUBLIC_APP_URL") ?? "";
+  response.headers.set(
+    "Content-Security-Policy",
+    buildContentSecurityPolicy({
+      supabaseUrl,
+      isDev: process.env.NODE_ENV === "development",
+      upgradeInsecure: appUrl.startsWith("https://"),
+    }),
+  );
+  return response;
+}
+
 export async function proxy(request: NextRequest) {
+  const response = await route(request);
+  return withSecurityHeaders(response, runtimeEnv("NEXT_PUBLIC_SUPABASE_URL"));
+}
+
+async function route(request: NextRequest) {
   const url = runtimeEnv("NEXT_PUBLIC_SUPABASE_URL");
   const key = runtimeEnv("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY") ?? runtimeEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY");
   const { pathname, search } = request.nextUrl;
@@ -34,6 +54,7 @@ export async function proxy(request: NextRequest) {
 
   let response = NextResponse.next({ request });
   const supabase = createServerClient(url, key, {
+    cookieOptions: authCookieOptions(runtimeEnv("NEXT_PUBLIC_APP_URL")),
     cookies: {
       getAll() {
         return request.cookies.getAll();
