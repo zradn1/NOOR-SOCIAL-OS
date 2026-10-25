@@ -4,7 +4,10 @@ import { cn } from "@/lib/utils/cn";
 export function Card({ className, ...props }: ComponentProps<"section">) {
   return (
     <section
-      className={cn("rounded-lg border border-line bg-surface shadow-[var(--shadow-card)]", className)}
+      className={cn(
+        "rounded-lg border border-line bg-surface bg-[linear-gradient(180deg,rgb(244_239_228/0.025),transparent_45%)] shadow-[var(--shadow-card)]",
+        className,
+      )}
       {...props}
     />
   );

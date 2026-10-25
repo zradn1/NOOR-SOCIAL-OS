@@ -50,8 +50,13 @@ export async function WorkspaceShell({ slug, children }: { slug: string; childre
       >
         Skip to content
       </a>
-      <aside className="sticky top-0 hidden h-dvh flex-col gap-5 border-r border-line bg-sunken px-3 py-4 lg:flex">
-        <Link href={`/w/${slug}/dashboard`} className="w-fit px-2 py-1">
+      <aside className="sticky top-0 isolate hidden h-dvh flex-col gap-5 overflow-hidden border-r border-line bg-sunken px-3 py-4 lg:flex">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute -top-32 -left-24 -z-10 size-80 rounded-full bg-[radial-gradient(closest-side,rgb(201_164_106/0.1),transparent)]"
+        />
+        <div aria-hidden="true" className="grain pointer-events-none absolute inset-0 -z-10" />
+        <Link href={`/w/${slug}/dashboard`} className="w-fit rounded-md px-2 py-1">
           <NoorLogo />
         </Link>
         {switcher}
@@ -64,9 +69,13 @@ export async function WorkspaceShell({ slug, children }: { slug: string; childre
         </div>
       </aside>
 
-      <div className="flex min-w-0 flex-col">
+      <div className="relative isolate flex min-w-0 flex-col">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute top-0 left-1/2 -z-10 h-[28rem] w-full max-w-5xl -translate-x-1/2 bg-[radial-gradient(ellipse_60%_55%_at_50%_0%,rgb(201_164_106/0.07),transparent_70%)]"
+        />
         {ctx.workspace.isDemo ? <DemoBanner /> : null}
-        <header className="sticky top-0 z-30 flex h-14 items-center gap-2 border-b border-line bg-canvas/85 px-3 backdrop-blur-md sm:px-6">
+        <header className="sticky top-0 z-30 flex h-14 items-center gap-2 border-b border-line bg-canvas/70 px-3 backdrop-blur-xl backdrop-saturate-150 sm:px-6">
           <MobileNav sections={sections} switcher={switcher} />
           <div className="flex min-w-0 flex-1 items-center gap-2">
             <span className="truncate text-[13px] text-fg-muted">

@@ -7,7 +7,7 @@ import { Spinner } from "./spinner";
 export const buttonVariants = cva(
   [
     "relative inline-flex shrink-0 select-none items-center justify-center gap-2 whitespace-nowrap rounded-md font-medium",
-    "transition-[background-color,border-color,color,box-shadow,opacity] duration-150",
+    "transition-[background-color,border-color,color,box-shadow,opacity,filter] duration-150",
     "focus-visible:shadow-[var(--shadow-focus)] disabled:pointer-events-none disabled:opacity-45",
     "[&_svg]:pointer-events-none [&_svg]:shrink-0",
   ],
@@ -15,7 +15,7 @@ export const buttonVariants = cva(
     variants: {
       variant: {
         primary:
-          "bg-gold-400 text-gold-ink shadow-[inset_0_1px_0_rgb(255_255_255/0.25)] hover:bg-gold-300 active:bg-gold-500",
+          "bg-[linear-gradient(180deg,var(--color-gold-300),var(--color-gold-400))] text-gold-ink shadow-[inset_0_1px_0_rgb(255_255_255/0.35),0_1px_2px_rgb(0_0_0/0.45),0_8px_24px_-12px_rgb(201_164_106/0.6)] hover:brightness-110 active:brightness-95",
         secondary:
           "bg-surface-raised text-fg border border-line-strong hover:bg-surface-hover hover:border-silver-700",
         outline:
