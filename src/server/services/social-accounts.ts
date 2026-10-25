@@ -4,7 +4,7 @@ import { sql } from "kysely";
 import { PLATFORM_META, type Platform } from "@/lib/platforms/registry";
 import { assertCan, type WorkspaceContext } from "@/server/auth/context";
 import type { SessionUser } from "@/server/auth/session";
-import { getDb, withSystem, withUser, type Executor, type Tx } from "@/server/db/client";
+import { getDb, withSystem, withUser, type Tx } from "@/server/db/client";
 import { env } from "@/server/env";
 import { AppError, notFound } from "@/server/errors";
 import { IntegrationNotImplementedError } from "@/server/integrations/errors";
@@ -514,13 +514,4 @@ export async function completeAuthorization(
     logger.warn("oauth.callback_failed", { platform: input.platform, reason, error });
     return { ok: false, reason, redirectPath: state.redirect_path };
   }
-}
-
-/** Removes expired, unused OAuth states (called by the worker). */
-export async function pruneOAuthStates(executor: Executor = getDb()) {
-  const result = await executor
-    .deleteFrom("oauth_states")
-    .where((eb) => eb.or([eb("expires_at", "<", sql<Date>`now() - interval '1 day'`), eb("consumed_at", "is not", null)]))
-    .executeTakeFirst();
-  return Number(result.numDeletedRows);
 }
