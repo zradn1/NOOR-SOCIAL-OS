@@ -159,7 +159,7 @@ Every variable is listed, with its purpose and default, in
 | --- | --- |
 | App | `NEXT_PUBLIC_APP_URL` |
 | Supabase | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (or `…_ANON_KEY`), `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_STORAGE_BUCKET` |
-| Database | `DATABASE_URL`, `DATABASE_POOL_MAX`, `DATABASE_SSL` |
+| Database | `DATABASE_URL`, `DATABASE_POOL_MAX`, `DATABASE_SSL`, `DATABASE_SSL_CA` |
 | Security | `TOKEN_ENCRYPTION_KEYS`, `TOKEN_ENCRYPTION_ACTIVE_KEY_ID`, `IP_HASH_SECRET`, `CRON_SECRET`, `RATE_LIMIT_MULTIPLIER` |
 | AI | `AI_PROVIDER`, `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL`, `ANTHROPIC_EFFORT` |
 | Billing | `BILLING_PROVIDER`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_STARTER`, `STRIPE_PRICE_PRO`, `STRIPE_PRICE_AGENCY` |
@@ -175,7 +175,12 @@ environment.
 
 1. Create a Supabase project.
 2. **Database URL:** use the **transaction pooler** connection string
-   (port 6543) for `DATABASE_URL`, and set `DATABASE_SSL=require`.
+   (port 6543) for `DATABASE_URL`. Supabase signs its database certificates
+   with its own CA, which isn't in Node's trust store: download it from
+   Database Settings → SSL Configuration, put the PEM in `DATABASE_SSL_CA`, and
+   set `DATABASE_SSL=require`. `DATABASE_SSL=no-verify` encrypts without
+   verifying the server; use it only until the CA is in place. TLS parameters
+   in the URL (`sslmode` …) are ignored; `DATABASE_SSL` decides.
 3. **API keys:** copy the project URL, the publishable key, and the service role
    key (server only) into your environment.
 4. **Data API:** under Project Settings → API, remove `public` from the exposed
@@ -363,7 +368,7 @@ billing webhooks, admin access, demo isolation, and security headers.
 
 **Infrastructure**
 
-- [ ] Supabase project with the transaction pooler; `DATABASE_SSL=require`
+- [ ] Supabase project with the transaction pooler; `DATABASE_SSL=require` with `DATABASE_SSL_CA`
 - [ ] Migrations applied with `supabase db push`
 - [ ] `public` removed from the Data API's exposed schemas
 - [ ] Auth site URL, redirect URLs, token-hash email templates, and SMTP configured

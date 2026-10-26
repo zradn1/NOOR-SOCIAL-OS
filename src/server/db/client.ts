@@ -2,6 +2,7 @@ import "server-only";
 import { Kysely, PostgresDialect, sql, type Transaction } from "kysely";
 import { Pool, types } from "pg";
 import { databaseUrl, env } from "@/server/env";
+import { connectionOptions } from "./connection";
 import type { DB } from "./schema.generated";
 
 export type Database = DB;
@@ -20,11 +21,10 @@ const globalForDb = globalThis as unknown as { __noorDb?: Kysely<DB> };
 function createDb() {
   const e = env();
   const pool = new Pool({
-    connectionString: databaseUrl(),
+    ...connectionOptions(databaseUrl(), e.DATABASE_SSL, e.DATABASE_SSL_CA),
     max: e.DATABASE_POOL_MAX,
     idleTimeoutMillis: 10_000,
     connectionTimeoutMillis: 10_000,
-    ssl: e.DATABASE_SSL === "disable" ? undefined : { rejectUnauthorized: e.DATABASE_SSL === "require" },
     application_name: "noor-social-os",
   });
   return new Kysely<DB>({ dialect: new PostgresDialect({ pool }) });

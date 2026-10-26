@@ -50,7 +50,9 @@ trade-offs. Architecture details are in [ARCHITECTURE.md](./ARCHITECTURE.md).
 - Remove `public` from the Supabase Data API's exposed schemas (Project
   Settings → API). The app doesn't use PostgREST; RLS protects the tables
   either way, but there's no reason to expose them.
-- Use the transaction pooler with `DATABASE_SSL=require`.
+- Use the transaction pooler with `DATABASE_SSL=require` and Supabase's root
+  certificate in `DATABASE_SSL_CA` (Database Settings → SSL Configuration).
+  `no-verify` still encrypts but doesn't authenticate the server.
 - Generate `TOKEN_ENCRYPTION_KEYS`, `IP_HASH_SECRET`, and `CRON_SECRET` with a
   CSPRNG (`openssl rand -base64 32`). Rotate encryption keys by adding a new id
   and switching `TOKEN_ENCRYPTION_ACTIVE_KEY_ID`; keep old ids until tokens are
