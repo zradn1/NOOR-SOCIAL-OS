@@ -32,6 +32,9 @@ const schema = z.object({
   DATABASE_URL: optional,
   DATABASE_POOL_MAX: z.coerce.number().int().min(1).max(50).default(5),
   DATABASE_SSL: z.enum(["disable", "require", "no-verify"]).default("disable"),
+  // PEM of the database's root CA (Supabase: Database Settings → SSL
+  // Configuration). Trusted in addition to the system CAs when DATABASE_SSL=require.
+  DATABASE_SSL_CA: optional,
 
   // Secrets
   TOKEN_ENCRYPTION_KEYS: optional,
