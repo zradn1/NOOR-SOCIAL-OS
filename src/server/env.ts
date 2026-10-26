@@ -28,8 +28,11 @@ const schema = z.object({
   SUPABASE_SERVICE_ROLE_KEY: optional,
   SUPABASE_STORAGE_BUCKET: z.string().default("media"),
 
-  // Postgres (Supabase transaction pooler in production).
+  // Postgres (Supabase transaction pooler in production). Without DATABASE_URL,
+  // the pooled URLs injected by the Supabase–Vercel integration are used.
   DATABASE_URL: optional,
+  POSTGRES_URL: optional,
+  POSTGRES_PRISMA_URL: optional,
   DATABASE_POOL_MAX: z.coerce.number().int().min(1).max(50).default(5),
   DATABASE_SSL: z.enum(["disable", "require", "no-verify"]).default("disable"),
   // PEM of the database's root CA (Supabase: Database Settings → SSL
@@ -87,8 +90,11 @@ export function env(): ServerEnv {
 }
 
 export class ConfigurationError extends Error {
-  constructor(public readonly missing: string[]) {
-    super(`Missing configuration: ${missing.join(", ")}`);
+  constructor(
+    public readonly missing: string[],
+    message = `Missing configuration: ${missing.join(", ")}`,
+  ) {
+    super(message);
     this.name = "ConfigurationError";
   }
 }
@@ -102,10 +108,25 @@ export function supabaseConfig() {
   return { url: e.NEXT_PUBLIC_SUPABASE_URL, key };
 }
 
-export function databaseUrl() {
-  const url = env().DATABASE_URL;
-  if (!url) throw new ConfigurationError(["DATABASE_URL"]);
+const DATABASE_URL_SOURCES = ["DATABASE_URL", "POSTGRES_URL", "POSTGRES_PRISMA_URL"] as const;
+
+/**
+ * The first database URL that is set wins. A malformed value is reported by
+ * name rather than skipped, so a typo never silently switches databases (and
+ * never surfaces as node-postgres' cryptic "ENOTFOUND base").
+ */
+export function resolveDatabaseUrl(e: Pick<ServerEnv, (typeof DATABASE_URL_SOURCES)[number]>) {
+  const name = DATABASE_URL_SOURCES.find((key) => e[key]);
+  if (!name) throw new ConfigurationError(["DATABASE_URL"]);
+  const url = e[name] as string;
+  if (!/^postgres(ql)?:\/\/\S+$/.test(url)) {
+    throw new ConfigurationError([name], `${name} must be a postgres:// or postgresql:// URL (no quotes or "${name}=" prefix)`);
+  }
   return url;
+}
+
+export function databaseUrl() {
+  return resolveDatabaseUrl(env());
 }
 
 /** Which required pieces are configured. Names only, never values. */
@@ -114,7 +135,7 @@ export function configurationStatus() {
   return {
     supabaseAuth: Boolean(e.NEXT_PUBLIC_SUPABASE_URL && (e.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? e.NEXT_PUBLIC_SUPABASE_ANON_KEY)),
     supabaseServiceRole: Boolean(e.SUPABASE_SERVICE_ROLE_KEY),
-    database: Boolean(e.DATABASE_URL),
+    database: Boolean(e.DATABASE_URL ?? e.POSTGRES_URL ?? e.POSTGRES_PRISMA_URL),
     tokenEncryption: Boolean(e.TOKEN_ENCRYPTION_KEYS && e.TOKEN_ENCRYPTION_ACTIVE_KEY_ID),
     ipHashing: Boolean(e.IP_HASH_SECRET),
     cron: Boolean(e.CRON_SECRET),
